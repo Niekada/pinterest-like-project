@@ -1,6 +1,10 @@
+import Routes from './routes/Routes'
+
 const App = () => {
   return (
-    <div>App</div>
+    <div>
+      <Routes />
+    </div>
   )
 }
 
