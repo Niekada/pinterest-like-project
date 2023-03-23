@@ -1,41 +1,40 @@
-import { ImageList, ImageListItem } from "@mui/material";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { ImageList, ImageListItem, LinearProgress } from "@mui/material";
+import { useEffect, useState } from "react";
 
-import { useImages } from "../../hooks/images";
-import { useState, useEffect } from "react"
+import InfiniteScroll from "react-infinite-scroll-component";
 import { PixabayImage } from "../../types/image";
 import { uniqBy } from "lodash";
-import { LinearProgress } from '@mui/material';
-import { useAppSelector } from "../../hooks/store"
+import { useAppSelector } from "../../hooks/store";
+import useDebounce from "../../hooks/useDebounce";
+import { useImages } from "../../hooks/images";
+import usePreviousValue from "../../hooks/usePreviousValue";
 
 const Home = () => {
   const searchValue = useAppSelector((state) => state.search.value);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebounce(searchValue);
+  const previousSearchValue = usePreviousValue(searchValue);
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<PixabayImage[]>([]);
   const { data, isLoading } = useImages(page, debouncedSearch);
   const images = data || [];
-
+  console.log(searchValue, ":", previousSearchValue);
   useEffect(() => {
-    setTimeout(() => {
-      if (searchValue) {
-        setDebouncedSearch(searchValue);
-        setPage(1);
-        setItems([]);
-      }
-    }, 1000)
-  }, [searchValue]);
+    if (searchValue || (!searchValue && previousSearchValue)) {
+      setPage(1);
+      setItems([]);
+    }
+  }, [searchValue, previousSearchValue]);
 
   useEffect(() => {
     if (!isLoading) {
-      setItems(prevItems => 
+      setItems((prevItems) =>
         uniqBy([...prevItems, ...images], (image) => image.id)
       );
     }
   }, [images]);
 
   const fetchData = () => {
-    setPage(prevPage => prevPage + 1);
+    setPage((prevPage) => prevPage + 1);
   };
 
   return (
@@ -43,9 +42,9 @@ const Home = () => {
       dataLength={images.length}
       next={fetchData}
       hasMore={true}
-      loader={<LinearProgress/>}
+      loader={<LinearProgress />}
       endMessage={
-        <p style={{ textAlign: 'center' }}>
+        <p style={{ textAlign: "center" }}>
           <b>Yay! You have seen it all</b>
         </p>
       }
@@ -58,7 +57,7 @@ const Home = () => {
               srcSet={`${item.webformatURL}?w=248&fit=crop&auto=format&dpr=2 2x`}
               alt={item.id.toString()}
               loading="lazy"
-              style={{ borderRadius: 8, minHeight: 50 }}
+              style={{ borderRadius: 8 }}
             />
           </ImageListItem>
         ))}
